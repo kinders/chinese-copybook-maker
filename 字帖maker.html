@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <title>字帖maker</title>
+  </head>
+
+  <body>
+    <div style="margin-left: auto; margin-right: auto; width: 600px;">
+    <h1>欢迎使用“字帖maker”</h1>
+    <p>前言：本应用的实现依赖html5的画布——可是IE浏览器6、7、8版都不支持html5。<br>建议使用IE9及以上版本，或者火狐、谷歌、猎豹、360等其他浏览器。</p>
+    <hr>
+    <hr>
+    <div>
+      <div>
+        <h2>第一步，在这里输入文本</h2>
+        <textarea id="words_area" cols="50" rows="5" style="margin-left: 30px; width: 100%;">请在这里输入文字！</textarea>
+      </div>
+      <div>
+        <h2>第二步，选择单个格子的大小</h2>
+  <p>单位：px（据说一厘米约合28.3px）；默认40px</p>
+  <input id="size_range" type="number" name="copybook_size" max=400 min=1 step=1 value=40 style="margin-left: 30px; width: 100%;">
+      </div>
+      <div>
+        <h2>第三步，选择格子的颜色（一般是红色）</h2>
+  <input id="copybook_line_color" type="color" name="copybook_line_color" value="red" style="margin-left: 30px; width: 100%;">
+      </div>
+      <div>
+        <h2>第四步，选择汉字的颜色（一般是灰色）</h2>
+        <input id="copybook_word_color" type="color" name="copybook_word_color" value="gray" style="margin-left: 30px; width: 100%;">
+      </div>
+      <div>
+        <h2>第五步，选择书法的风格（默认：楷体）</h2>
+        <input id="copybook_word_style" type="text" name="copybook_word_style" value="KaiTi,KaiTi_GB2312,AR PL UKai CN,simkai,楷体,STKaiti" style="margin-left: 30px; width: 100%;">
+	<p>注意：字体的实现依赖系统。<br>如果您的系统没有该字体，本应用将采用系统默认字体。<br>当然，您还可以上网下载并安装那些喜欢的字体。</p>
+        <p>下面是一些常用的参考值<br>楷体：KaiTi,KaiTi_GB2312,AR PL UKai CN,simkai,楷体,STKaiti<br>仿宋体：Fangsong,STFangsong</p>
+        <p>更多字体的代码可查看您的系统(如Windows里的“控制面板-字体”)，或者参考<a href="http://www.xwbetter.com/font-family/">这里</a>等网络资料，实在不行就百度谷歌一下吧。</p>
+      </div>
+      <div>
+        <h2>第六步，选择字体的虚实（默认：实心）</h2>
+        <input type="radio" name="solid_or_hollow" value="solid" checked="checked" style="margin-left: 30px;">实心  
+        <input type="radio" name="solid_or_hollow" value="hollow" style="margin-left: 30px;">空心
+      </div>
+      <div>
+        <h2>第七步，点击生成</h2>
+        <button onclick="create_copybook()" style="background-color: #68ee68; width: 300px; height: 50px; font-size: 32px; margin-left: 150px;">生成字帖</button>
+        <p>提示：若是对生成的字帖不满意，可点击浏览器“返回”按钮，回到本应用重新设置。</p>
+      </div>
+    </div>
+    <hr>
+    <p>我是李启训，一起来关注<a href="http://www.gnu.org">自由软件</a>运动吧!</p>
+  </div>
+
+    <script type="text/javascript">
+    function create_copybook(){
+      // 首先读入文本框的内容。
+      var words_string = "";
+      words_string = document.getElementById("words_area").value;
+      //alert(words_string);
+      var words = [];
+      //var alert_words_string=words_string.substr(0,1); alert(alert_words_string);
+      for(var i=0; i<words_string.length; i++){words = words.concat(words_string.substr(i,1));}
+      //var alert_words = words.join(); alert(alert_words);
+      // 读入格子大小的设置
+      var canvas_node_width=parseInt(document.getElementById("size_range").value);
+      // 读入格子颜色的设置
+      var canvas_line_color=document.getElementById("copybook_line_color").value;
+      // 读入汉字颜色的设置
+      var canvas_word_color=document.getElementById("copybook_word_color").value;
+      // 读入汉字风格的设置
+      var canvas_word_style=document.getElementById("copybook_word_style").value;
+      // 读入字帖汉字的虚实
+      var solid_or_hollow = "";
+      (function getStatus(){
+          var radio=document.getElementsByName("solid_or_hollow");
+          for(var i=0;i<radio.length;i++){
+	    if(radio[i].checked==true){
+	      solid_or_hollow=radio[i].value;
+	      break;
+	    }
+          }
+        }());
+
+      //准备页面
+      document.write("<div id=\"canvas_area\"><canvas width=\"1\" height=\"1\" id=\"cs\">浏览器不支持canvas!<br>建议使用IE9，或火狐、谷歌浏览器。</canvas></div>");
+
+      // 下面（第二步）制作字帖。
+      for(var i=0; i < words.length; i++){
+        var canvas_area_name = "word_" + i;
+        //alert(canvas_area_name);
+
+        // 需要创建一个<canvas>标签
+        var new_canvas_node=document.createElement("canvas");
+        new_canvas_node.width=canvas_node_width+2;
+        new_canvas_node.height=canvas_node_width+2;
+        new_canvas_node.id=canvas_area_name;
+        var new_canvas_text_node=document.createTextNode(words[i]);
+        new_canvas_node.appendChild(new_canvas_text_node);
+        var canvas_area=document.getElementById("canvas_area");
+        var cs=document.getElementById("cs")
+        canvas_area.insertBefore(new_canvas_node, cs);
+
+        // 制作字帖
+  make_copy_book(canvas_area_name, words[i], canvas_line_color, canvas_word_color, canvas_word_style, solid_or_hollow);
+        //alert("会话完成！下面是画另一个。");
+      }
+    return false;
+    };
+
+    function make_copy_book(canvas_area_name, word_in_book, canvas_line_color, canvas_word_color, canvas_word_style, solid_or_hollow){
+      var oCanvas = document.getElementById(canvas_area_name);
+      if (oCanvas.getContext) {
+        var ctx = oCanvas.getContext('2d'),
+        w = oCanvas.width-2,   //边长
+        half = w / 2,        //边长的一半
+        span = 4;            //每条虚线的实线部分长度
+        word_position= w/2;
+        // 下面画矩形
+        ctx.strokeStyle = canvas_line_color;     // 红色线
+        ctx.lineWidth = 1;               // 线宽
+        ctx.strokeRect(1, 1, w - 1, w - 1);   // 绘制无填充的矩形
+      
+        //下面画中间的虚线!
+        ctx.save();
+        ctx.lineWidth = 1;   //设置线宽
+        ctx.beginPath();
+        ctx.setLineDash([2,2]); //创建2像素长，间隔为2像素的虚线
+          //横线
+        ctx.moveTo(0, half);
+        ctx.lineTo(w, half);
+          //竖线
+        ctx.moveTo(half, 0);
+        ctx.lineTo(half, w);
+          //把虚线画出来
+        ctx.stroke();
+        ctx.closePath();
+        ctx.restore();
+      
+        // 下面写字
+        ctx.font= w/5*4 + "px " + canvas_word_style;
+        ctx.fillStyle = canvas_word_color;
+        ctx.strokeStyle = canvas_word_color;
+        ctx.textBaseline="middle"; 
+        ctx.textAlign="center";
+        if (solid_or_hollow == "solid"){
+        ctx.fillText(word_in_book, word_position, word_position);  //字体实心效果
+        };
+	if (solid_or_hollow == "hollow"){
+        ctx.strokeText(word_in_book, word_position, word_position);  //字体空心效果
+	};
+      }
+    }
+    </script>
+
+  </body>
+
+</html>
